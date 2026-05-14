@@ -3,14 +3,19 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "palomares-datacleaner"
+name = "datacleaner"
 version = "0.1.0"
-description = "Utilidad para limpieza simple de DataFrames de pandas"
+description = "Utilidad para la limpieza y preprocesamiento de DataFrames de pandas"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Nicolas Palomares", email = "palomaresnicolas4@gmail.com" }]
 requires-python = ">=3.12"
-dependencies = ["pandas"]
+dependencies = [
+    "pandas",
+]
 
 [project.urls]
 Repository = "https://github.com/NicolasPalomaresDS/palomares-datacleaner"
+
+[tool.setuptools.packages.find]
+include = ["datacleaner*"]
