@@ -75,53 +75,48 @@ class DataCleaner:
         """Muestra un primer vistazo de las filas del DataFrame con valores nulos"""
         display(self.df[self.df.isna().any(axis=1)])
 
-    def _evaluate_null_strategy(self, strategy: str="mean") -> None:
+    def _evaluate_null_strategy(self, columns: list, strategy: str = "mean") -> None:
         """Imputa los datos nulos con la estadística especificada
 
         Args:
+            columns (list): lista con los nombres de las columnas a imputar.
             strategy (str, optional): Estrategia para imputar valores nulos. Defaults to "mean".
         """
-        for col in self.df.columns[
-            self.df.isna().any()
-        ]:
+        for col in columns:
+            if col not in self.df.columns:
+                print(f"  ✗ '{col}' no existe en el DataFrame — omitida")
+                continue
             if strategy == "mean":
-                self.df[col] = (
-                    self.df[col].fillna(self.df[col].mean())
-                )
-
+                self.df[col] = self.df[col].fillna(self.df[col].mean())
             elif strategy == "median":
-                self.df[col] = (
-                    self.df[col].fillna(self.df[col].median())
-                )
-
+                self.df[col] = self.df[col].fillna(self.df[col].median())
             elif strategy == "mode":
-                self.df[col] = (
-                    self.df[col].fillna(self.df[col].mode()[0])
-                )
-
+                self.df[col] = self.df[col].fillna(self.df[col].mode()[0])
             else:
                 raise ValueError(
-                    f"Estrategia '{strategy}' no reconocida.",
-                    "Use 'mean', 'median' o 'mode'."
+                    f"Estrategia '{strategy}' no reconocida. Use 'mean', 'median' o 'mode'."
                 )
 
     def clean_nulls(
         self,
-        delete: bool=False,
-        strategy: str="mean"
+        columns:  list,
+        delete:   bool = False,
+        strategy: str  = "mean"
     ) -> None:
         """Limpia los datos nulos del DataFrame
 
         Args:
+            columns (list): lista con los nombres de las columnas a limpiar.
             delete (bool, optional): decide si eliminar o reemplazar los datos nulos. Defaults to False.
             strategy (str, optional): Estrategia para imputar valores nulos. Defaults to "mean".
         """
         if delete:
-            self.df = self.df.dropna()
+            self.df = self.df.dropna(subset=columns)
             print("Datos nulos correctamente eliminados")
         else:
-            self._evaluate_null_strategy(strategy)
+            self._evaluate_null_strategy(columns, strategy)
             print(f"Datos nulos correctamente reemplazados con: {strategy}")
+
 
     #------------------------------------------------------------------------
     # TRATAMIENTO DE DUPLICADOS

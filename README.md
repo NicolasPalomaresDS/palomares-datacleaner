@@ -72,7 +72,8 @@ cleaner = DataCleaner(df)
 cleaner.get_summary()
 
 # Limpieza de nulos
-cleaner.clean_nulls(delete=False, strategy="mean")
+cleaner.clean_nulls(columns=["precio", "edad"], strategy="median") # Imputar valor
+cleaner.clean_nulls(columns=["nombre"], delete=True) # Eliminarlos
 
 # Limpieza de duplicados
 cleaner.clean_dups()
