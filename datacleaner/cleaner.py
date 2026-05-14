@@ -199,12 +199,16 @@ class DataCleaner:
             col (str): nombre de la columna a convertir
             to (str): nombre del tipo de dato objetivo
         """
-        if col not in self.df.columns:
-            raise ValueError(
-                f"Columna '{col}' no existe en el DataFrame."
-            )
-
         try:
+            if to == "int64" and self.df[col].isna().any():
+                null_count = self.df[col].isna().sum()
+                print(
+                    f"✗ No se pudo convertir '{col}' a int64: "
+                    f"la columna tiene {null_count} valor/es nulo/s. "
+                    f"Se recomienda limpiar los nulos primero con clean_nulls()."
+                )
+                return
+
             if to == "datetime":
                 self._datetime_condition(col=col)
 
@@ -224,6 +228,7 @@ class DataCleaner:
                 f"✗ No se pudo convertir '{col}' "
                 f"a {to}: {e}"
             )
+
 
     def cast_columns(self, columns: list, to: str) -> None:
         """Corrige los tipos de datos de las columnas del DataFrame
