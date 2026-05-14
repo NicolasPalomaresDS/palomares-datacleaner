@@ -75,8 +75,14 @@ cleaner.get_summary()
 cleaner.clean_nulls(columns=["precio", "edad"], strategy="median") # Imputar valor
 cleaner.clean_nulls(columns=["nombre"], delete=True) # Eliminarlos
 
-# Limpieza de duplicados
-cleaner.clean_dups()
+# Compara filas e índices duplicados
+cleaner.clean_dups_by_id()
+
+# Considera solo las columnas especificadas
+cleaner.clean_dups_by_subset(subset=["nombre", "fecha", "precio"])
+
+# Considera todas las columnas
+cleaner.clean_dups_by_subset()
 
 # Conversión de tipos
 cleaner.cast_columns(columns=["fecha"], to="datetime")

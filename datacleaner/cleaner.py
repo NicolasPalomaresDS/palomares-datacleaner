@@ -122,8 +122,23 @@ class DataCleaner:
     # TRATAMIENTO DE DUPLICADOS
     #------------------------------------------------------------------------
 
-    def _check_dups(self) -> None:
+    def _check_dups(self, subset: list = None) -> None:
         """Imprime un checkeo general de los datos duplicados"""
+        fully_duplicated = self.df[self.df.duplicated(subset=subset, keep=False)]
+
+        print(
+            f"Filas duplicadas: {len(fully_duplicated)}\n",
+            "-" * 80
+        )
+
+    def _delete_dups(self, subset: list = None) -> None:
+        """Elimina las filas duplicadas del DataFrame"""
+        self.df = self.df[~self.df.duplicated(subset=subset, keep="first")]
+
+        print(f"Filas restantes: {len(self.df)}")
+
+    def clean_dups_by_id(self) -> None:
+        """Limpia los duplicados comparando filas completas e índices duplicados"""
         fully_duplicated = self.df[self.df.duplicated(keep=False)]
         duplicated_index = self.df[self.df.index.duplicated(keep=False)]
 
@@ -136,8 +151,6 @@ class DataCleaner:
             "-" * 80
         )
 
-    def _delete_dups(self) -> None:
-        """Elimina las filas duplicadas del DataFrame"""
         self.df = self.df[~self.df.duplicated(keep="first")]
 
         print(
@@ -145,10 +158,17 @@ class DataCleaner:
             f"\nIndex duplicados restantes: {self.df.index.duplicated().sum()}"
         )
 
-    def clean_dups(self) -> None:
-        """Limpia por completo los datos duplicados del DataFrame"""
-        self._check_dups()
-        self._delete_dups()
+    def clean_dups_by_subset(self, subset: list = None) -> None:
+        """Limpia los duplicados considerando las columnas especificadas
+
+        Args:
+            subset (list, optional): columnas a considerar para detectar duplicados.
+                Si es None, se usan todas las columnas. Defaults to None.
+        """
+        self._check_dups(subset=subset)
+        self._delete_dups(subset=subset)
+
+
 
     #------------------------------------------------------------------------
     # TRATAMIENTO DE DTYPES
