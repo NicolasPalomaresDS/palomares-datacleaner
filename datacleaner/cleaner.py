@@ -83,15 +83,20 @@ class DataCleaner:
             strategy (str, optional): Estrategia para imputar valores nulos. Defaults to "mean".
         """
         for col in columns:
+
             if col not in self.df.columns:
                 print(f"  ✗ '{col}' no existe en el DataFrame — omitida")
                 continue
+
             if strategy == "mean":
                 self.df[col] = self.df[col].fillna(self.df[col].mean())
+
             elif strategy == "median":
                 self.df[col] = self.df[col].fillna(self.df[col].median())
+
             elif strategy == "mode":
                 self.df[col] = self.df[col].fillna(self.df[col].mode()[0])
+
             else:
                 raise ValueError(
                     f"Estrategia '{strategy}' no reconocida. Use 'mean', 'median' o 'mode'."
@@ -352,6 +357,7 @@ class DataCleaner:
             tuple: (col, lower, upper)
         """
         for col in columns:
+
             if col not in self.df.columns:
                 print(f"  ✗ '{col}' no existe en el DataFrame — omitida")
                 continue
@@ -444,7 +450,7 @@ class DataCleaner:
 
         for col, lower, upper in self._iter_outlier_columns(columns, method, threshold):
 
-            n_out = self._handle_outliers_col(col, lower, upper, delete)
+            n_out = self._handle_outliers(col, lower, upper, delete)
             flag  = " ⚠️" if n_out > 0 else " ✅"
             print(
                 f"  {col:<25} {n_out:>10,}{flag}"
