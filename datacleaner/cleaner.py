@@ -385,7 +385,7 @@ class DataCleaner:
         upper: float,
         delete: bool,
         side: str = "both"
-    ) -> int:
+    ) -> dict:
         """Maneja outliers con la acción elegida (elimina/cappea)
 
         Args:
@@ -395,22 +395,40 @@ class DataCleaner:
             delete (bool): True elimina filas, False aplica capping
 
         Returns:
-            int: cantidad de outliers detectados
+            dict: estadísticas del tratamiento
         """
-        mask = (self.df[col] < lower) | (self.df[col] > upper)
-        n_out = mask.sum()
+        mask_lower = self.df[col] < lower
+        mask_upper = self.df[col] > upper
+
+        if side == "lower":
+            mask_active = mask_lower
+            mask_ignored = mask_upper
+        elif side == "upper":
+            mask_active = mask_upper
+            mask_ignored = mask_lower
+        else:
+            mask_active  = mask_lower | mask_upper
+            mask_ignored = pd.Series(False, index=self.df.index)
+
+        n_active  = int(mask_active.sum())
+        n_ignored = int(mask_ignored.sum())
 
         if delete:
-            self.df = self.df[~mask]
+            self.df = self.df[~mask_active]
         else:
             clip_lower = lower if side in {"both", "lower"} else None
             clip_upper = upper if side in {"both", "upper"} else None
-            self.df.loc[mask, col] = self.df.loc[mask, col].clip(
+            self.df.loc[mask_active, col] = self.df.loc[mask_active, col].clip(
                 lower=clip_lower,
                 upper=clip_upper
             )
 
-        return n_out
+        return {
+            "n_active":  n_active,   # outliers tratados
+            "n_ignored": n_ignored,  # outliers del otro lado, no tocados
+            "n_lower":   int(mask_lower.sum()),
+            "n_upper":   int(mask_upper.sum()),
+        }
 
     def display_outliers(
         self,
@@ -461,16 +479,32 @@ class DataCleaner:
         self._validate_side(side)
 
         action = "eliminados" if delete else "cappeados"
-        print(f"  Método: {method.upper()}  |  Acción: {action}\n")
-        print(f"  {'Columna':<25} {'Outliers':>10} {'Límite inf.':>14} {'Límite sup.':>14}")
-        print(f"  {'─' * 65}")
+        side_str = {"both": "ambos lados", "lower": "solo bajos", "upper": "solo altos"}[side]
+
+        print(f"  Método: {method.upper()}  |  Acción: {action}  |  Lado: {side_str}\n")
+        print(
+            f"  {'Columna':<22} {'Bajos':>7} {'Altos':>7} "
+            f"{'Tratados':>10} {'Sin tocar':>10} "
+            f"{'Límite inf.':>13} {'Límite sup.':>13}"
+        )
+        print(f"  {'─' * 86}")
+
+        total_active  = 0
+        total_ignored = 0
 
         for col, lower, upper in self._iter_outlier_columns(columns, method, threshold):
+            stats = self._handle_outliers(col, lower, upper, delete, side)
 
-            n_out = self._handle_outliers(col, lower, upper, delete, side)
-            flag  = " ⚠️" if n_out > 0 else " ✅"
+            total_active  += stats["n_active"]
+            total_ignored += stats["n_ignored"]
+
+            flag = " ⚠️" if stats["n_active"] > 0 else " ✅"
             print(
-                f"  {col:<25} {n_out:>10,}{flag}"
-                f"  {lower:>12.2f}  {upper:>12.2f}"
+                f"  {col:<22} {stats['n_lower']:>7,} {stats['n_upper']:>7,} "
+                f"  {stats['n_active']:>7,}{flag} {stats['n_ignored']:>9,} "
+                f"  {lower:>11.2f}  {upper:>11.2f}"
             )
+
+        print(f"  {'─' * 86}")
+        print(f"  {'TOTAL':<22} {total_active:>10,} tratados  |  {total_ignored:>6,} sin tocar")
 
