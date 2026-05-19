@@ -283,6 +283,15 @@ class DataCleaner:
                 f"Método '{method}' no reconocido. Use 'iqr' o 'zscore'."
             )
 
+    def _validate_side(self, side: str) -> None:
+        """Valida que el parámetro 'side' tenga un valor permitido.
+
+        Args:
+            side (str): lado a considerar para el tratamiento de outliers.
+        """
+        if side not in ("both", "lower", "upper"):
+            raise ValueError("side debe ser 'both', 'lower' o 'upper'.")
+
     def _get_iqr_bounds(self, col: str) -> tuple:
         """Calcula límite inferior y superior calculando IQR
 
@@ -315,7 +324,7 @@ class DataCleaner:
         std = self.df[col].std()
 
         lower_bound = mean - threshold * std
-        higher_bound = mean + threshold * std
+        upper_bound = mean + threshold * std
 
         return (lower_bound, upper_bound)
 
@@ -374,7 +383,8 @@ class DataCleaner:
         col: str,
         lower: float,
         upper: float,
-        delete: bool
+        delete: bool,
+        side: str = "both"
     ) -> int:
         """Maneja outliers con la acción elegida (elimina/cappea)
 
@@ -393,7 +403,12 @@ class DataCleaner:
         if delete:
             self.df = self.df[~mask]
         else:
-            self.df[col] = self.df[col].clip(lower=lower, upper=upper)
+            clip_lower = lower if side in {"both", "lower"} else None
+            clip_upper = upper if side in {"both", "upper"} else None
+            self.df.loc[mask, col] = self.df.loc[mask, col].clip(
+                lower=clip_lower,
+                upper=clip_upper
+            )
 
         return n_out
 
@@ -431,7 +446,8 @@ class DataCleaner:
         columns: list,
         method: str = "iqr",
         delete: bool = False,
-        threshold: float = 3.0
+        threshold: float = 3.0,
+        side: str = "both"
     ) -> None:
         """Detecta y trata outliers de las columnas especificadas
 
@@ -442,6 +458,7 @@ class DataCleaner:
             threshold (float, optional): umbral de detección para Z-score. Defaults to 3.0.
         """
         self._validate_method(method)
+        self._validate_side(side)
 
         action = "eliminados" if delete else "cappeados"
         print(f"  Método: {method.upper()}  |  Acción: {action}\n")
@@ -450,7 +467,7 @@ class DataCleaner:
 
         for col, lower, upper in self._iter_outlier_columns(columns, method, threshold):
 
-            n_out = self._handle_outliers(col, lower, upper, delete)
+            n_out = self._handle_outliers(col, lower, upper, delete, side)
             flag  = " ⚠️" if n_out > 0 else " ✅"
             print(
                 f"  {col:<25} {n_out:>10,}{flag}"
