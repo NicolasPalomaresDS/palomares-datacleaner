@@ -68,12 +68,28 @@ from datacleaner import DataCleaner
 df = pd.read_csv("datos.csv")
 cleaner = DataCleaner(df)
 
+# **************************************
+# DataFrame Summary
+# **************************************
+
 # Resumen del DataFrame
 cleaner.get_summary()
 
+# **************************************
+# Nulos
+# **************************************
+
 # Limpieza de nulos
-cleaner.clean_nulls(columns=["precio", "edad"], strategy="median") # Imputar valor
+
+# Imputar valor
+cleaner.clean_nulls(columns=["precio", "edad"], strategy="median")
+
+# Eliminarlos
 cleaner.clean_nulls(columns=["nombre"], delete=True) # Eliminarlos
+
+# **************************************
+# Duplicados
+# **************************************
 
 # Compara filas e índices duplicados
 cleaner.clean_dups_by_id()
@@ -84,13 +100,24 @@ cleaner.clean_dups_by_subset(subset=["nombre", "fecha", "precio"])
 # Considera todas las columnas
 cleaner.clean_dups_by_subset()
 
+# **************************************
+# Data Types
+# **************************************
+
 # Conversión de tipos
 cleaner.cast_columns(columns=["fecha"], to="datetime")
 cleaner.cast_columns(columns=["precio", "edad"], to="float64")
 
-# Detección y limpieza de outliers
+# **************************************
+# Outliers
+# **************************************
+
+# Mostrar outliers
 cleaner.display_outliers(columns=["precio", "edad"], method="iqr")
-cleaner.clean_outliers(columns=["precio", "edad"], method="iqr", delete=False)
+
+# Imputarlos
+# 'side' determina si imputar solo los outliers bajos ('low'), los altos ('upper'), o ambos ('both')
+cleaner.clean_outliers(columns=["precio", "edad"], method="iqr", side="both")
 ```
 
 ## Desarrollo
