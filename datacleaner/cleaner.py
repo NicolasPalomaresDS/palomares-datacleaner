@@ -68,6 +68,55 @@ class DataCleaner:
         print(f"{'━' * 60}\n")
 
     #------------------------------------------------------------------------
+    # GESTIÓN DE COLUMNAS
+    #------------------------------------------------------------------------
+
+    def rename_columns(self, mapping: dict) -> None:
+        """Renombra columnas del DataFrame
+
+        Args:
+            mapping (dict): diccionario {nombre_actual: nombre_nuevo}.
+        """
+        valid_mapping = {}
+
+        for old_name, new_name in mapping.items():
+            if old_name not in self.df.columns:
+                print(f"  ✗ '{old_name}' no existe en el DataFrame — omitida")
+                continue
+            valid_mapping[old_name] = new_name
+
+        if not valid_mapping:
+            print("  ✗ No se renombró ninguna columna (ninguna válida).")
+            return
+
+        self.df = self.df.rename(columns=valid_mapping)
+
+        for old_name, new_name in valid_mapping.items():
+            print(f"  ✓ '{old_name}' renombrada → '{new_name}'")
+
+    def drop_columns(self, columns: list) -> None:
+        """Elimina una o más columnas del DataFrame
+
+        Args:
+            columns (list): lista con los nombres de las columnas a eliminar.
+        """
+        valid_cols = []
+
+        for col in columns:
+            if col not in self.df.columns:
+                print(f"  ✗ '{col}' no existe en el DataFrame — omitida")
+                continue
+            valid_cols.append(col)
+
+        if not valid_cols:
+            print("  ✗ No se eliminó ninguna columna (ninguna válida).")
+            return
+
+        self.df = self.df.drop(columns=valid_cols)
+        print(f"  ✓ Columnas eliminadas: {', '.join(valid_cols)}")
+
+
+    #------------------------------------------------------------------------
     # TRATAMIENTO DE NULLS
     #------------------------------------------------------------------------
 
